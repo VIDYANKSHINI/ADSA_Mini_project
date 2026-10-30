@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Strength Analyzer | ADSA Mini Project</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-badge">ADSA Mini Project &bull; Unit III</div>
+      <h1 class="header-title">
+        <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Password Strength Analyzer
+      </h1>
+      <p class="header-subtitle">Real-time String Processing &amp; Hash Table Dictionary Verification</p>
+      
+      <div class="architecture-pill">
+        <span class="pill-dot"></span>
+        <span>Client UI Demo (Vanilla JS) &bull; Core ADSA Engine in <strong>main.cpp</strong> (C++)</span>
+      </div>
+    </header>
+
+    <!-- Main Card -->
+    <main class="analyzer-card">
+      <!-- Input Section -->
+      <div class="input-section">
+        <div class="label-row">
+          <label for="passwordInput">Enter Password to Analyze</label>
+          <span class="char-count" id="charCount">0 characters</span>
+        </div>
+
+        <div class="input-box">
+          <input 
+            type="password" 
+            id="passwordInput" 
+            placeholder="Type or paste a password..." 
+            autocomplete="off" 
+            spellcheck="false"
+          >
+          <button type="button" id="toggleVisibilityBtn" class="icon-btn" title="Show / Hide Password">
+            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+          <button type="button" id="copyBtn" class="icon-btn" title="Copy to clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Test Preset Chips for Viva Demo -->
+      <div class="preset-section">
+        <span class="preset-label">Quick Test Examples:</span>
+        <div class="preset-chips">
+          <button type="button" class="chip" data-pwd="password123">password123 (Common)</button>
+          <button type="button" class="chip" data-pwd="qwerty">qwerty (Weak)</button>
+          <button type="button" class="chip" data-pwd="DevStudent2024">DevStudent2024 (Medium)</button>
+          <button type="button" class="chip" data-pwd="K9#mQ!vL28$x">K9#mQ!vL28$x (Strong)</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="button-row">
+        <button id="analyzeBtn" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          Analyze Password
+        </button>
+        <button id="resetBtn" class="btn btn-outline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          Reset
+        </button>
+      </div>
+
+      <!-- Live Results Area -->
+      <section id="resultsSection" class="results-area" style="display: none;">
+        <!-- Strength Banner & Meter -->
+        <div class="strength-card">
+          <div class="strength-header">
+            <div>
+              <span class="meta-label">SECURITY RATING</span>
+              <div class="strength-title-row">
+                <h2 id="strengthText" class="strength-text text-weak">Weak Password</h2>
+                <span id="strengthBadge" class="status-badge badge-weak">Weak</span>
+              </div>
+            </div>
+            <div class="score-box">
+              <span class="score-number" id="scoreNumber">0</span>
+              <span class="score-denom">/ 5</span>
+            </div>
+          </div>
+
+          <!-- Multi-Segment Visual Bar -->
+          <div class="segmented-meter">
+            <div class="meter-segment" id="seg1"></div>
+            <div class="meter-segment" id="seg2"></div>
+            <div class="meter-segment" id="seg3"></div>
+            <div class="meter-segment" id="seg4"></div>
+            <div class="meter-segment" id="seg5"></div>
+          </div>
+        </div>
+
+        <!-- Common Weak Password Warning Alert -->
+        <div id="commonWarning" class="alert-banner" style="display: none;">
+          <div class="alert-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="alert-body">
+            <strong>CRITICAL: Matched Common Weak Password!</strong>
+            <p>This password was matched in the predefined Hash Table of common dictionary passwords. Automated attack bots can crack it in milliseconds.</p>
+          </div>
+        </div>
+
+        <!-- Checklist Grid -->
+        <div class="details-section">
+          <h3 class="section-heading">Character Diversity Checklist</h3>
+          <div class="checklist-grid">
+            <div class="check-item failed" id="checkLength">
+              <span class="check-icon"></span>
+              <div class="check-info">
+                <strong>Length Check</strong>
+                <span>Minimum 8 characters</span>
+              </div>
+            </div>
+            <div class="check-item failed" id="checkUpper">
+              <span class="check-icon"></span>
+              <div class="check-info">
+                <strong>Uppercase Letter</strong>
+                <span>At least one (A-Z)</span>
+              </div>
+            </div>
+            <div class="check-item failed" id="checkLower">
+              <span class="check-icon"></span>
+              <div class="check-info">
+                <strong>Lowercase Letter</strong>
+                <span>At least one (a-z)</span>
+              </div>
+            </div>
+            <div class="check-item failed" id="checkDigit">
+              <span class="check-icon"></span>
+              <div class="check-info">
+                <strong>Numeric Digit</strong>
+                <span>At least one (0-9)</span>
+              </div>
+            </div>
+            <div class="check-item failed" id="checkSpecial">
+              <span class="check-icon"></span>
+              <div class="check-info">
+                <strong>Special Symbol</strong>
+                <span>At least one (!@#$...)</span>
+              </div>
+            </div>
+            <div class="check-item passed" id="checkCommon">
+              <span class="check-icon"></span>
+              <div class="check-info">
+                <strong>Dictionary Check</strong>
+                <span id="commonStatusText">Not in common weak list</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live ADSA Hash Inspector -->
+        <div class="hash-inspector-box">
+          <div class="inspector-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="9" x2="20" y2="9"></line>
+              <line x1="4" y1="15" x2="20" y2="15"></line>
+              <line x1="10" y1="3" x2="8" y2="21"></line>
+              <line x1="16" y1="3" x2="14" y2="21"></line>
+            </svg>
+            <strong>Live ADSA Hash Inspector (Separate Chaining Demo)</strong>
+          </div>
+          <div class="inspector-body">
+            <div class="inspector-stat">
+              <span class="stat-name">Polynomial Hash Value:</span>
+              <code id="hashRawValue">0</code>
+            </div>
+            <div class="inspector-stat">
+              <span class="stat-name">Table Size (M):</span>
+              <code>31 (Prime)</code>
+            </div>
+            <div class="inspector-stat">
+              <span class="stat-name">Target Bucket Index:</span>
+              <code id="hashBucketIndex" class="highlight-code">Bucket #0</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggestions Section -->
+        <div class="suggestions-box">
+          <h3 class="section-heading">Recommendations to Improve</h3>
+          <ul id="suggestionsList" class="suggestions-list">
+            <!-- Dynamic elements populated via script.js -->
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer Theory / Viva Notes -->
+    <footer class="theory-footer">
+      <div class="theory-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        ADSA Unit III Concepts Applied
+      </div>
+      <div class="theory-grid">
+        <div class="theory-item">
+          <strong>Hash Function</strong>
+          <p>Rolling polynomial accumulation: <code>(sum(ch &times; 31<sup>i</sup>)) mod 31</code> spreads inputs uniformly.</p>
+        </div>
+        <div class="theory-item">
+          <strong>Separate Chaining</strong>
+          <p>Collisions are chained into linked lists. Average lookup: <code>O(1 + &alpha;)</code>, where &alpha; is load factor.</p>
+        </div>
+        <div class="theory-item">
+          <strong>Complexity</strong>
+          <p>Lookup time: <code>O(1)</code> average. Space: <code>O(M + N)</code> where M = 31 buckets, N = loaded passwords.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" style="display: none;">Copied to clipboard!</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
