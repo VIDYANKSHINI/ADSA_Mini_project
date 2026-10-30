@@ -1,21 +1,19 @@
 /**
- * Password Strength Analyzer - Enhanced Interactive Script
- * Features:
- * - Real-time analysis as the user types
- * - Custom Hash Table with Separate Chaining (mirroring C++ main.cpp logic)
- * - Live Polynomial Hash Value & Target Bucket inspector
- * - Quick Preset Chips for Viva Demonstrations
- * - Show/Hide password toggle & Copy to Clipboard
+ * PAY-RIGHT DASHBOARD SCRIPT // ADSA MINI PROJECT
+ * - Real-time deterministic analysis on input
+ * - Custom Hash Table with Separate Chaining (Unit III)
+ * - Live polynomial rolling hash computation
+ * - Pay-right cyberpunk styling and instant response
  */
 
-// Custom Hash Table in JavaScript (ADSA Demonstration)
+// Custom Hash Table in JavaScript (Separate Chaining demonstration)
 class JSHashTable {
   constructor(size = 31) {
     this.size = size;
     this.table = new Array(size).fill(null).map(() => []);
   }
 
-  // Polynomial rolling hash function matching C++ implementation
+  // Polynomial rolling hash function matching C++ main.cpp
   hash(key) {
     let hashVal = 0;
     const primeMultiplier = 31;
@@ -25,8 +23,8 @@ class JSHashTable {
     return hashVal;
   }
 
-  // Returns un-modulo'd representation for viva inspector demonstration
-  calculateDebugHash(key) {
+  // Un-modulo'd hash accumulator for live inspector display
+  calculateInspectorHash(key) {
     let hashVal = 0;
     const primeMultiplier = 31;
     for (let i = 0; i < key.length; i++) {
@@ -36,7 +34,6 @@ class JSHashTable {
     return { rawHash: hashVal, bucketIndex: bucket };
   }
 
-  // Insert key into bucket chain
   insert(key) {
     const idx = this.hash(key);
     if (!this.table[idx].includes(key)) {
@@ -44,14 +41,13 @@ class JSHashTable {
     }
   }
 
-  // Check if key exists in hash table
   contains(key) {
     const idx = this.hash(key);
     return this.table[idx].includes(key);
   }
 }
 
-// Predefined list of common weak passwords
+// Pre-populate weak passwords into Hash Table
 const weakPasswordTable = new JSHashTable(31);
 const commonWeakList = [
   "password", "123456", "12345678", "123456789", "qwerty",
@@ -66,13 +62,16 @@ commonWeakList.forEach(pwd => weakPasswordTable.insert(pwd.toLowerCase()));
 const passwordInput = document.getElementById("passwordInput");
 const charCount = document.getElementById("charCount");
 const toggleVisibilityBtn = document.getElementById("toggleVisibilityBtn");
+const eyeText = document.getElementById("eyeText");
 const copyBtn = document.getElementById("copyBtn");
-const eyeIcon = document.getElementById("eyeIcon");
 const analyzeBtn = document.getElementById("analyzeBtn");
 const resetBtn = document.getElementById("resetBtn");
-const resultsSection = document.getElementById("resultsSection");
 
-// Strength Elements
+// Inspector Elements
+const hashRawValue = document.getElementById("hashRawValue");
+const hashBucketIndex = document.getElementById("hashBucketIndex");
+
+// Rating Elements
 const strengthText = document.getElementById("strengthText");
 const strengthBadge = document.getElementById("strengthBadge");
 const scoreNumber = document.getElementById("scoreNumber");
@@ -85,53 +84,38 @@ const segments = [
 ];
 const commonWarning = document.getElementById("commonWarning");
 
-// Checklist Items
+// Matrix Checklist Rows
 const checkLength = document.getElementById("checkLength");
 const checkUpper = document.getElementById("checkUpper");
 const checkLower = document.getElementById("checkLower");
 const checkDigit = document.getElementById("checkDigit");
 const checkSpecial = document.getElementById("checkSpecial");
 const checkCommon = document.getElementById("checkCommon");
-const commonStatusText = document.getElementById("commonStatusText");
+const commonDesc = document.getElementById("commonDesc");
 
-// Inspector & Suggestions
-const hashRawValue = document.getElementById("hashRawValue");
-const hashBucketIndex = document.getElementById("hashBucketIndex");
+// Suggestions Terminal & Toast
 const suggestionsList = document.getElementById("suggestionsList");
 const toast = document.getElementById("toast");
 
-// Preset Chips
-const presetChips = document.querySelectorAll(".chip");
+// Presets
+const presetBtns = document.querySelectorAll(".preset-btn");
 
-// Toggle Show/Hide Password
+// Toggle Show/Hide
 let isPasswordVisible = false;
 toggleVisibilityBtn.addEventListener("click", () => {
   isPasswordVisible = !isPasswordVisible;
   passwordInput.type = isPasswordVisible ? "text" : "password";
-  
-  if (isPasswordVisible) {
-    eyeIcon.innerHTML = `
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-      <line x1="1" y1="1" x2="23" y2="23"></line>
-    `;
-    toggleVisibilityBtn.title = "Hide Password";
-  } else {
-    eyeIcon.innerHTML = `
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-    `;
-    toggleVisibilityBtn.title = "Show Password";
-  }
+  eyeText.textContent = isPasswordVisible ? "HIDE" : "SHOW";
 });
 
-// Copy Password to Clipboard
+// Copy Password
 copyBtn.addEventListener("click", () => {
   const pwd = passwordInput.value;
   if (!pwd) return;
   navigator.clipboard.writeText(pwd).then(() => {
-    showToast("Password copied to clipboard!");
+    showToast("PASSWORD COPIED TO CLIPBOARD");
   }).catch(() => {
-    showToast("Copied!");
+    showToast("COPIED!");
   });
 });
 
@@ -140,42 +124,93 @@ function showToast(msg) {
   toast.style.display = "block";
   setTimeout(() => {
     toast.style.display = "none";
-  }, 2000);
+  }, 1800);
 }
 
-// Preset Chip Clicks
-presetChips.forEach(chip => {
-  chip.addEventListener("click", () => {
-    const sample = chip.getAttribute("data-pwd");
-    passwordInput.value = sample;
-    analyzePassword();
+// Preset Buttons
+presetBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const pwd = btn.getAttribute("data-pwd");
+    passwordInput.value = pwd;
+    runAnalysis();
   });
 });
 
-// Live input listener
+// Live Input Event
 passwordInput.addEventListener("input", () => {
-  const len = passwordInput.value.length;
-  charCount.textContent = `${len} character${len === 1 ? '' : 's'}`;
-  if (len > 0) {
-    analyzePassword();
-  } else {
-    resultsSection.style.display = "none";
-  }
+  runAnalysis();
 });
 
-// Core Analyzer Function
-function analyzePassword() {
+// Reset Event
+resetBtn.addEventListener("click", () => {
+  passwordInput.value = "";
+  charCount.textContent = "00 CHARS";
+  resetToIdle();
+  passwordInput.focus();
+});
+
+// Analyze Button Event
+analyzeBtn.addEventListener("click", () => {
+  if (!passwordInput.value) {
+    showToast("PLEASE ENTER PASSWORD FIRST");
+    passwordInput.focus();
+    return;
+  }
+  runAnalysis();
+});
+
+function resetToIdle() {
+  hashRawValue.textContent = "--";
+  hashBucketIndex.textContent = "BUCKET [--]";
+  
+  strengthText.textContent = "AWAITING INPUT";
+  strengthText.className = "strength-grade text-muted";
+  
+  strengthBadge.textContent = "IDLE";
+  strengthBadge.className = "grade-pill pill-muted";
+  
+  scoreNumber.textContent = "0";
+  
+  segments.forEach(seg => seg.className = "segment");
+  commonWarning.style.display = "none";
+
+  setMatrixRow(checkLength, false);
+  setMatrixRow(checkUpper, false);
+  setMatrixRow(checkLower, false);
+  setMatrixRow(checkDigit, false);
+  setMatrixRow(checkSpecial, false);
+  
+  checkCommon.className = "matrix-row passed";
+  checkCommon.querySelector(".matrix-status").textContent = "PASS";
+  commonDesc.textContent = "Not in common weak hash table";
+
+  suggestionsList.innerHTML = `<li class="log-item idle-msg">&gt; Enter or select a password to trigger security analysis...</li>`;
+}
+
+function setMatrixRow(rowElem, isPassed) {
+  const statusElem = rowElem.querySelector(".matrix-status");
+  if (isPassed) {
+    rowElem.className = "matrix-row passed";
+    statusElem.textContent = "PASS";
+  } else {
+    rowElem.className = "matrix-row failed";
+    statusElem.textContent = "FAIL";
+  }
+}
+
+// Main Analysis Function
+function runAnalysis() {
   const pwd = passwordInput.value;
+  const len = pwd.length;
+  charCount.textContent = `${len.toString().padStart(2, '0')} CHARS`;
 
   if (!pwd) {
-    resultsSection.style.display = "none";
+    resetToIdle();
     return;
   }
 
-  resultsSection.style.display = "flex";
-
-  // 1. String Diversity Checks
-  const hasLength = pwd.length >= 8;
+  // 1. Character Diversity
+  const hasLength = len >= 8;
   const hasUpper = /[A-Z]/.test(pwd);
   const hasLower = /[a-z]/.test(pwd);
   const hasDigit = /[0-9]/.test(pwd);
@@ -183,27 +218,28 @@ function analyzePassword() {
 
   // 2. Hash Table Lookup
   const isCommon = weakPasswordTable.contains(pwd.toLowerCase());
-  const hashDebug = weakPasswordTable.calculateDebugHash(pwd);
+  const hashInspector = weakPasswordTable.calculateInspectorHash(pwd);
 
-  // Update Live Hash Inspector
-  hashRawValue.textContent = hashDebug.rawHash;
-  hashBucketIndex.textContent = `Bucket #${hashDebug.bucketIndex}`;
+  // Update Inspector
+  hashRawValue.textContent = hashInspector.rawHash;
+  hashBucketIndex.textContent = `BUCKET [#${hashInspector.bucketIndex}]`;
 
-  // Update Check Items UI
-  setCheckState(checkLength, hasLength);
-  setCheckState(checkUpper, hasUpper);
-  setCheckState(checkLower, hasLower);
-  setCheckState(checkDigit, hasDigit);
-  setCheckState(checkSpecial, hasSpecial);
-  
-  // Dictionary check state
+  // Update Matrix
+  setMatrixRow(checkLength, hasLength);
+  setMatrixRow(checkUpper, hasUpper);
+  setMatrixRow(checkLower, hasLower);
+  setMatrixRow(checkDigit, hasDigit);
+  setMatrixRow(checkSpecial, hasSpecial);
+
   if (isCommon) {
-    checkCommon.className = "check-item failed";
-    commonStatusText.textContent = "Matched common weak dictionary!";
-    commonWarning.style.display = "flex";
+    checkCommon.className = "matrix-row failed";
+    checkCommon.querySelector(".matrix-status").textContent = "MATCH";
+    commonDesc.textContent = "MATCHED: Common weak password dictionary";
+    commonWarning.style.display = "block";
   } else {
-    checkCommon.className = "check-item passed";
-    commonStatusText.textContent = "Safe: Not in common weak list";
+    checkCommon.className = "matrix-row passed";
+    checkCommon.querySelector(".matrix-status").textContent = "PASS";
+    commonDesc.textContent = "Not in common weak hash table";
     commonWarning.style.display = "none";
   }
 
@@ -215,109 +251,83 @@ function analyzePassword() {
   if (hasDigit) score++;
   if (hasSpecial) score++;
 
-  // 4. Determine Classification
-  let strength = "Weak";
-  let colorCategory = "weak";
+  // 4. Classification
+  let grade = "WEAK";
+  let gradeClass = "weak";
 
   if (isCommon || score <= 2) {
-    strength = "Weak";
-    colorCategory = "weak";
+    grade = "WEAK";
+    gradeClass = "weak";
   } else if (score === 3 || score === 4) {
-    strength = "Medium";
-    colorCategory = "medium";
+    grade = "MEDIUM";
+    gradeClass = "medium";
   } else {
-    strength = "Strong";
-    colorCategory = "strong";
+    grade = "STRONG";
+    gradeClass = "strong";
   }
 
-  // Update Score & Header Banner
+  // Update Grade & Score display
   scoreNumber.textContent = score;
-  strengthText.textContent = `${strength} Password`;
-  strengthText.className = `strength-text text-${colorCategory}`;
-  
-  strengthBadge.textContent = strength;
-  strengthBadge.className = `status-badge badge-${colorCategory}`;
+  strengthText.textContent = `${grade} PASSWORD`;
+  strengthText.className = `strength-grade text-${gradeClass}`;
 
-  // Update 5-Segment Progress Meter
-  updateSegmentMeter(score, colorCategory);
+  strengthBadge.textContent = grade;
+  strengthBadge.className = `grade-pill pill-${gradeClass}`;
 
-  // 5. Update Suggestions
-  renderSuggestions({
+  // 5. Update Segments
+  segments.forEach((seg, idx) => {
+    seg.className = "segment";
+    if (idx < score) {
+      seg.classList.add(`active-${gradeClass}`);
+    }
+  });
+
+  // 6. Update Terminal Recommendations Log
+  renderTerminalRecommendations({
     isCommon,
     hasLength,
     hasUpper,
     hasLower,
     hasDigit,
     hasSpecial,
-    strength
+    grade
   });
 }
 
-function setCheckState(element, passed) {
-  element.className = passed ? "check-item passed" : "check-item failed";
-}
-
-function updateSegmentMeter(score, colorCategory) {
-  segments.forEach((seg, index) => {
-    seg.className = "meter-segment";
-    if (index < score) {
-      seg.classList.add(`active-${colorCategory}`);
-    }
-  });
-}
-
-function renderSuggestions(status) {
+function renderTerminalRecommendations(status) {
   suggestionsList.innerHTML = "";
-  const tips = [];
+  const logs = [];
 
   if (status.isCommon) {
-    tips.push("Avoid standard dictionary passwords, popular culture words, or sequential number patterns.");
+    logs.push("&gt; [WARN] Dictionary collision: Password exists in cracked databases. Change immediately.");
   }
   if (!status.hasLength) {
-    tips.push("Make it longer: Aim for at least 8 characters (12+ characters provides exponential security).");
+    logs.push("&gt; [TIP] Increase length to &gt;= 8 characters (12+ characters recommended).");
   }
   if (!status.hasUpper) {
-    tips.push("Include at least one uppercase letter (A-Z) to increase character entropy.");
+    logs.push("&gt; [TIP] Inject uppercase characters [A-Z] to break lowercase pattern.");
   }
   if (!status.hasLower) {
-    tips.push("Include at least one lowercase letter (a-z).");
+    logs.push("&gt; [TIP] Include lowercase characters [a-z].");
   }
   if (!status.hasDigit) {
-    tips.push("Insert numeric digits (0-9) within or between words.");
+    logs.push("&gt; [TIP] Append or embed numeric digits [0-9].");
   }
   if (!status.hasSpecial) {
-    tips.push("Add special symbols (!@#$%^&*) to prevent brute-force dictionary attacks.");
+    logs.push("&gt; [TIP] Include high-entropy symbols [!@#$%^&*].");
   }
 
-  if (tips.length === 0 && status.strength === "Strong" && !status.isCommon) {
+  if (logs.length === 0 && status.grade === "STRONG" && !status.isCommon) {
     const li = document.createElement("li");
-    li.className = "success-tip";
-    li.textContent = "✔ Excellent! Your password satisfies all character diversity rules and is not in the dictionary.";
+    li.className = "log-item success-msg";
+    li.innerHTML = "&gt; [OPTIMAL] All criteria satisfied. Password meets high security standards.";
     suggestionsList.appendChild(li);
   } else {
-    tips.forEach(t => {
+    logs.forEach(msg => {
       const li = document.createElement("li");
-      li.textContent = t;
+      li.className = "log-item";
+      li.innerHTML = msg;
       suggestionsList.appendChild(li);
     });
   }
 }
-
-// Reset Handler
-resetBtn.addEventListener("click", () => {
-  passwordInput.value = "";
-  charCount.textContent = "0 characters";
-  resultsSection.style.display = "none";
-  commonWarning.style.display = "none";
-  passwordInput.focus();
-});
-
-// Explicit Analyze button
-analyzeBtn.addEventListener("click", () => {
-  if (!passwordInput.value) {
-    alert("Please enter a password first!");
-    passwordInput.focus();
-    return;
-  }
-  analyzePassword();
-});
